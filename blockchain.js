@@ -43,11 +43,16 @@ class Blockchain {
         for (let i = 1; i < chain.length; ++i) {
             const block = chain[i];
             const actualLastHash = chain[i-1].hash;
+            const actualLastDifficulty = chain[i-1].difficulty;
 
             const {timestamp, lastHash, data, hash, nonce, difficulty} = block;
 
             if (actualLastHash != lastHash) {
                 // console.log('Failed for lastHash-mismatch: ' + JSON.stringify(block));
+                return false;
+            }
+
+            if (Math.abs(actualLastDifficulty - difficulty) > 1) {
                 return false;
             }
 
