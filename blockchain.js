@@ -44,14 +44,14 @@ class Blockchain {
             const block = chain[i];
             const actualLastHash = chain[i-1].hash;
 
-            const {timestamp, lastHash, data, hash} = block;
+            const {timestamp, lastHash, data, hash, nonce, difficulty} = block;
 
             if (actualLastHash != lastHash) {
                 // console.log('Failed for lastHash-mismatch: ' + JSON.stringify(block));
                 return false;
             }
 
-            const validatedCryptoHash = cryptoHash(timestamp, lastHash, data);
+            const validatedCryptoHash = cryptoHash(timestamp, lastHash, data, nonce, difficulty);
             if (validatedCryptoHash != hash) {
                 // console.log('Failed for hash-mismatch: ' + JSON.stringify(block));
                 return false;
