@@ -13,8 +13,8 @@ app.get('/api/blocks', (req, res) => {
 
 
 app.post('/api/mine', (req, res) => {
-    const { body } = req.body;
-    blockchain.addBlock({ body });
+    const body = req.body;
+    blockchain.addBlock(body);
 
     res.redirect('/api/blocks');
 });
