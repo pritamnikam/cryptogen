@@ -1,4 +1,5 @@
 const uuid = require('uuid/v1');
+const { verifySignature } = require('../util');
 
 class Transaction {
     constructor({senderWallet, recipient, amount}) {
@@ -22,6 +23,25 @@ class Transaction {
             amount: senderWallet.balance,
             signature: senderWallet.sign(outputMap)
         };
+    }
+
+    static validTransaction(transaction) {
+        const {input: { address, amount, signature }, outputMap} = transaction;
+
+        const amountTotal = Object.values(outputMap)
+                .reduce((total, outputAmount) => total + outputAmount );
+
+        if (amount !== amountTotal) {
+            console.error(`Invalid transaction for ${address}`);
+            return false;
+        }
+
+        if (!verifySignature({ publicKey: address, data: outputMap, signature })) {
+            console.error(`Invalid signature for ${address}`);
+            return false;
+        }
+
+        return true;
     }
 }
 
