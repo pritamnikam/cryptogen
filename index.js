@@ -20,10 +20,18 @@ app.post('/api/mine', (req, res) => {
     const body = req.body;
     blockchain.addBlock(body);
 
+    pubsub.broadcastChain();
+
     res.redirect('/api/blocks');
 });
 
-const PORT = 3000;
+const DEFAULT_PORT = 3000;
+let peer_port;
+
+if (process.env.GENERATE_PEER_PORT === 'true') {
+    peer_port = DEFAULT_PORT + Math.ceil(Math.random() * 1000);
+}
+const PORT = peer_port || DEFAULT_PORT;
 app.listen(PORT, console.log(`listening on localhost:${PORT}`));
 
 
