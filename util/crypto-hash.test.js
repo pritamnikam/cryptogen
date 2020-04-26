@@ -5,7 +5,7 @@ describe('cryptoHash()', () => {
         // Generated from SHA-256 online for string 'foo'
         // ref: https://emn178.github.io/online-tools/sha256.html
         expect(cryptoHash('foo'))
-          .toEqual('2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae');
+          .toEqual("b2213295d564916f89a6a42455567c87c3f480fcd7a1c15e220f17d7169a790b");
     });
 
 
@@ -14,5 +14,10 @@ describe('cryptoHash()', () => {
           .toEqual(cryptoHash("two", "three", "one"));
     });
 
-    
+    it('produces an unique hash when the properties have changed as input', () => {
+      const foo = {};
+      const originalHash = cryptoHash(foo);
+      foo['a'] = 'bar';
+      expect(cryptoHash(foo)).not.toEqual(originalHash);
+    })
 });
