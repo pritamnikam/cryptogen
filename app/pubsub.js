@@ -1,5 +1,5 @@
 const redis = require('redis');
-const Blockchain = require('./blockchain')
+const Blockchain = require('../blockchain')
 
 const CHANNELS = {
     TEST: 'TEST',
@@ -34,7 +34,11 @@ class PubSub {
     }
 
     publish({channel, message }) {
-        this.publisher.publish(channel, message);
+        this.subscriber.unsubscribe(channel, () => {
+            this.publisher.publish(channel, message, () => {
+                this.subscriber.subscribe(channel);
+            });
+        })
     }
 
     broadcastChain() {
