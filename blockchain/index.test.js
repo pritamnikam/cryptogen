@@ -1,6 +1,8 @@
 const Blockchain = require('./index');
 const Block = require('./block');
 const { cryptoHash } = require('../util');
+const Wallet = require('../wallet');
+const Transaction = require('../wallet/transaction');
 
 describe('Blockchain', () => {
     let blockchain; 
@@ -153,6 +155,85 @@ describe('Blockchain', () => {
                     expect(logMock).toHaveBeenCalled();
                 });
             });
+
+            describe('and the `validTransactions` flag id true', () => {
+                const validTransactionDataMock = jset.fn();
+                const originalvalidTransactionData = blockchain.validTransactionData;
+                blockchain.validTransactionData = validTransactionDataMock;
+
+                it('returns true', () => {
+                    newChain.addBlock( {data: 'foo' });
+                    blockchain.replaceChain(newChain.chain);
+                    expect(validTransactionDataMock).toHaveBeenCalled();
+                    blockchain.validTransactionData = originalvalidTransactionData;
+                })
+            })
         });
     });
+
+
+    describe('validTransactionData()', () => {
+        let transaction, rewardTransaction, wallet;
+
+        beforeEach(() => {
+            wallet = new Wallet();
+            transaction = wallet.createTransaction({ recipient: 'foo-address', amount: 20, chain: blockchain.chain });
+            rewardTransaction = Transaction.rewardTransaction({ minerWallet: wallet });
+        });
+
+        describe('and transaction data is valid', () => {
+            it('returns true', () => {
+                newChain.addBlock({ data: [transaction, rewardTransaction] });
+                expect(
+                    blockchain.validTransactionData({ chain: newChain.chain })
+                ).toBe(true);
+            });
+        });
+
+        describe('and the transaction data has multiple rewards', () => {
+            it('returns false', () => {
+                newChain.addBlock({ data: [transaction, rewardTransaction, rewardTransaction] });
+                expect(
+                    blockchain.validTransactionData({ chain: newChain.chain })
+                ).toBe(false);
+            });
+
+        });
+
+        describe('and the transaction data has atleast one malformed outputMap', () => {
+            describe('and the transaction is not a reward transaction', () => {
+                it('returns false', () => {
+                    transaction.outputMap[wallet.publicKey] = 99999;
+                    newChain.addBlock({ data: [transaction, rewardTransaction] });
+                    expect(
+                        blockchain.validTransactionData({ chain: newChain.chain })
+                    ).toBe(false);
+                });
+            });
+
+            describe('and the transaction is a reward transaction', () => {
+                it('returns false', () => {
+                    rewardTransaction.outputMap[wallet.publicKey] = 99999;
+                    newChain.addBlock({ data: [transaction, rewardTransaction] });
+                    expect(
+                        blockchain.validTransactionData({ chain: newChain.chain })
+                    ).toBe(false);
+                });
+            });
+        });
+
+        describe('and the transaction data has atleast one malformed input', () => {
+            it('returns false', () => {});
+        });
+
+        describe('and blockchain contains multiple identetical transactions', () => {
+            it('returns false', () => {
+                newChain.addBlock({ data: [transaction, transaction, transaction, rewardTransaction] });
+                expect(
+                    blockchain.validTransactionData({ chain: newChain.chain })
+                ).toBe(false);
+            });
+        });
+    });
+
 });
