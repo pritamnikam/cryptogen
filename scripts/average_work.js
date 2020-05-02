@@ -10,7 +10,7 @@ const times = [];
 for (let i = 0; i < 100; ++i) {
     prevTimestamp = blockchain.chain[blockchain.chain.length - 1].timestamp;
 
-    blockchain.addBlock({data: 'Block '+i});
+    blockchain.addBlock({data: `Block ${i}`});
     nextBlock = blockchain.chain[blockchain.chain.length -1];
 
     nextTimestamp = nextBlock.timestamp;
@@ -19,5 +19,5 @@ for (let i = 0; i < 100; ++i) {
     times.push(difference);
     avarage = times.reduce((total, num) => (total + num)) / times.length;
 
-    console.log('Time to mine: '+difference+'ms. Difficulty: ' +nextBlock.difficulty+', Average time: ' +avarage+'ms');
+    console.log(`Time to mine: ${difference}ms. Difficulty: ${nextBlock.difficulty}, Average time: ${avarage}ms`);
 }
