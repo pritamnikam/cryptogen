@@ -28,3 +28,12 @@ body {
     padding: 2%;
     margin: 2%;
 }
+
+.ConductTransaction, .TransactionPool {
+    padding: 10%
+}
+
+a, a:hover {
+    color: #e66;
+    text-decoration: underline;
+}

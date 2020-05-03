@@ -3,15 +3,15 @@ const express = require('express');
 const request = require('request');
 const path = require('path');
 
+const isDevelopment = process.env.ENV === 'development';
+const DEFAULT_PORT = 3000;
+const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
 
 const Blockchain = require('./blockchain');
 const PubSub = require('./app/pubsub');
 const TransactionPool = require('./wallet/transaction-pool');
 const Wallet = require('./wallet');
 const TransactionMiner = require('./app/transaction-miner');
-
-const DEFAULT_PORT = 3000;
-const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
 
 const app = express();
 const blockchain = new Blockchain();
@@ -27,6 +27,25 @@ app.use(express.static(path.join(__dirname, './client/dist')));
 
 app.get('/api/blocks', (req, res) => {
     res.json(blockchain.chain);
+});
+
+app.get('/api/blocks/length', (req, res) => {
+    res.json(blockchain.chain.length);
+});
+
+app.get('/api/blocks:id', (req, res) => {
+    const { id } = req.params;
+    const reverseChain = blockchain.chain.slice().reverse();
+    
+    const paginatedID = parseInt(id);
+    const length = blockchain.chain.length;
+
+    let startIndex = (paginatedID - 1) * 5;
+    let endIndex = paginatedID * 5;
+
+    startIndex = (startIndex > length) ? length : startIndex;
+    endIndex = (endIndex > length) ? length : endIndex;
+    res.json(reverseChain.slice(startIndex, endIndex));
 });
 
 app.post('/api/mine', (req, res) => {
@@ -81,6 +100,17 @@ app.get('/api/wallet-info', (req, res) => {
     });
 });
 
+app.get('/api/known-addresses', (req, res) => {
+    const addressMap = {}
+    for (let block of blockchain.chain) {
+        for (let transaction in block.data) {
+            const recipients = Object.keys(transaction.outputMap);
+            recipients.forEach(recipient => addressMap[recipient] = recipient);
+        }
+    }
+    res.json( Object.keys(addressMap) );
+});
+
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, './client/dist/index.html'));
 });
@@ -110,6 +140,68 @@ const syncTransactions = () => {
 const syncWithRootState = () => {
     syncChains();
     syncTransactions();
+}
+
+if (isDevelopment) {
+    
+    const walletFoo = new Wallet();
+    const walletBar = new Wallet();
+
+    const performTransaction = () => {
+        const trans1 = wallet.createTransaction({
+            recipient: walletFoo.publicKey,
+            amount: 50
+        });
+
+        const trans2 = wallet.createTransaction({
+            recipient: walletBar.publicKey,
+            amount: 30
+        });
+
+        return [trans1, trans2];
+    }
+
+    const performFooTransaction = () => {
+        const trans1 = walletFoo.createTransaction({
+            recipient: wallet.publicKey,
+            amount: 50
+        });
+
+        const trans2 = walletFoo.createTransaction({
+            recipient: walletBar.publicKey,
+            amount: 30
+        });
+
+        return [trans1, trans2];
+    }
+
+    const performBarTransaction = () => {
+        const trans1 = walletBar.createTransaction({
+            recipient: wallet.publicKey,
+            amount: 50
+        });
+
+        const trans2 = walletBar.createTransaction({
+            recipient: walletFoo.publicKey,
+            amount: 30
+        });
+
+        return [trans1, trans2];
+    }
+
+    for (let i = 0 ; i < 5; ++i) {
+        blockchain.addBlock( {
+            data: performTransaction()
+        });
+
+        blockchain.addBlock( {
+            data: performFooTransaction()
+        });
+
+        blockchain.addBlock( {
+            data: performBarTransaction()
+        });
+    }
 }
 
 let peer_port;

@@ -16,7 +16,7 @@ class Wallet {
 
     createTransaction({ recipient, amount, chain }) {
         if (chain) {
-            this.balance = Wallet.calculateBalance({ cahin: chain, address: this.publicKey });
+            this.balance = Wallet.calculateBalance({ chain: chain, address: this.publicKey });
         }
 
         if( amount > this.balance) {
